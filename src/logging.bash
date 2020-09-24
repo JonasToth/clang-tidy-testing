@@ -31,21 +31,21 @@ stderr() {
 
 # @brief Write an info message into the log filedescriptor (fd '3').
 log_info() {
-    echo "* $(date +"%d.%m.%Y %H:%M:%S")  INFO: $@" >&3
+    echo "* $(date +"%d.%m.%Y %H:%M:%S")  INFO: $*" >&3
 }
 
 # @brief Write a warning message into the log filedescriptor (fd '3').
 log_warn() {
-    echo "! $(date +"%d.%m.%Y %H:%M:%S")  WARN: $@" >&3
+    echo "! $(date +"%d.%m.%Y %H:%M:%S")  WARN: $*" >&3
 }
 
 # @brief Write an error message into the log filedescriptor (fd '3').
 log_error() {
-    echo "! $(date +"%d.%m.%Y %H:%M:%S") ERROR: $@" >&3
+    echo "! $(date +"%d.%m.%Y %H:%M:%S") ERROR: $*" >&3
 }
 
 # @brief This function writes any message into filedescriptor '4' for debugging
 # purposes.
 debug() {
-    echo "*  $(date +"%d.%m.%Y %H:%M:%S") ERROR: $@" >&4
+    echo "*  $(date +"%d.%m.%Y %H:%M:%S") ERROR: $*" >&4
 }
