@@ -8,10 +8,12 @@
 # manual patching. Each stage is verified with `ninja check-all`.
 
 : "${CLANG_TIDY_LIB:=/data/big/clang-tidy-testing/src}"
+: "${RUN_CLANG_TIDY:=/data/big/llvm-project/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py}"
+: "${CLANG_TIDY:=/data/big/dev-build/bin/clang-tidy}"
+
 : "${SOURCE_DIR:=/data/big/llvm-project}"
 : "${BINARY_DIR:=/data/big/dev-build}"
 : "${TEST_BUILD:=/data/big/test-build}"
-: "${RUN_CLANG_TIDY:=/data/big/llvm-project/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py}"
 
 : "${GIT_TAG:=llvmorg-11.0.0-rc3}"
 : "${BASE_REV:=$(cd ${SOURCE_DIR} && git checkout "${GIT_TAG}" > /dev/null 2>&1 && git rev-parse HEAD | cut -c -12)}"
@@ -28,13 +30,14 @@ exec 3>> "${LOG_DIR}/const_transformation.log"
 exec 4>> "${LOG_DIR}/const_transformation_debug.log"
 
 # shellcheck disable=SC1090
-source "${CLANG_TIDY_LIB}/logging.bash" || exit 1
+source "${CLANG_TIDY_LIB}/util.bash" || exit 1
+# shellcheck disable=SC1090
+source "${CLANG_TIDY_LIB}/logging.bash" || die "Can not source logging"
+# shellcheck disable=SC1090
+source "${CLANG_TIDY_LIB}/workstep.bash" || die "Can not source worksteps"
+# shellcheck disable=SC1090
+source "${CLANG_TIDY_LIB}/run_clang_tidy.bash" || die "Can not source clang-tidy"
 
-log_info "================================================================"
-log_info "Testing the log"
-debug "Testing the debug"
-
-exit 0
 
 log_info "Create new branch from current revision ${BASE_REV}, called ${BRANCH_NAME}"
 cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
@@ -48,8 +51,8 @@ else
 fi
 
 
-log_info "Test if everything is alright to start with"
-if [ ! -f "${LOG_DIR}/.base" ] ; then
+check_initial_state() {
+    log_info "Test if everything is alright to start with"
     cd "${TEST_BUILD}" || die "Can't change into test directory"
     ninja clean
     ninja check-all > "${LOG_DIR}/before_everything.log" 2> "${LOG_DIR}/before_everything.err" ||
@@ -57,15 +60,13 @@ if [ ! -f "${LOG_DIR}/.base" ] ; then
             log_error "Base-Revision is broken!"
             exit 1
         }
-    touch "${LOG_DIR}/.base"
-else
-    log_info "Stage already done"
-fi
+}
 
 
-log_info "Isolate Transformation"
-log_info "Check ${LOG_DIR}/isolate_decl.{log,err} for information on the execution."
-if [ ! -f "${LOG_DIR}/.isolation" ] ; then
+transform_isolate_declarations() {
+    log_info "Isolate Transformation"
+    log_info "Check ${LOG_DIR}/isolate_decl.{log,err} for information on the execution."
+
     python2 "${RUN_CLANG_TIDY}" \
         -clang-tidy-binary "${BINARY_DIR}/bin/clang-tidy" \
         "-checks=-*,readability-isolate-declaration" \
@@ -77,14 +78,11 @@ if [ ! -f "${LOG_DIR}/.isolation" ] ; then
     log_info "Commiting automatic refactoring"
     cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
     git commit -am "[Refactor] automatically isolate all declarations"
-    touch "${LOG_DIR}/.isolation"
-else
-    log_info "Isolation already done"
-fi
+}
 
 
-log_info "Testing if build is still ok"
-if [ ! -f "${LOG_DIR}/.test_isolation" ] ; then
+check_isolation() {
+    log_info "Testing if build is still ok"
     cd "${TEST_BUILD}" || die "Can't switch into ${TEST_BUILD}"
     ninja clean
     ninja check-all > "${LOG_DIR}/test_after_isolation.log" 2> "${LOG_DIR}/test_after_isolation.err" ||
@@ -92,14 +90,11 @@ if [ ! -f "${LOG_DIR}/.test_isolation" ] ; then
             log_error "Isolating all Declaration causes test-breakage!"
             exit 1
         }
-    touch "${LOG_DIR}/.test_isolation"
-else
-    log_info "Testing after isolation done"
-fi
+}
 
 
-log_info "Const Transformation"
-if [ ! -f "${LOG_DIR}/.const_transformation" ] ; then
+transform_const() {
+    log_info "Const Transformation"
     python2 "${RUN_CLANG_TIDY}" \
         -clang-tidy-binary "${BINARY_DIR}/bin/clang-tidy" \
         "-checks=-*,cppcoreguidelines-const-correctness" \
@@ -111,14 +106,11 @@ if [ ! -f "${LOG_DIR}/.const_transformation" ] ; then
     log_info "Commiting automatic refactoring"
     cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
     git commit -am "[Refactor] automatically declare everything const"
-    touch "${LOG_DIR}/.const_transformation"
-else
-    log_info "Const Transformation already done"
-fi
+}
 
 
-log_info "Testing if still runs"
-if [ ! -f "${LOG_DIR}/.const_test" ] ; then
+check_const() {
+    log_info "Testing if still runs"
     cd "${TEST_BUILD}" || die "Can't switch into ${TEST_BUILD}"
     ninja clean
     ninja check-all > "${LOG_DIR}/test_after_const.log" 2> "${LOG_DIR}/test_after_const.err" ||
@@ -126,7 +118,12 @@ if [ ! -f "${LOG_DIR}/.const_test" ] ; then
             log_error "Const Transformation causes test breakage!"
             exit 1
         }
-    touch "${LOG_DIR}/.const_test"
-else
-    log_info "Const Transformation test done"
-fi
+}
+
+workstep test_initial check_initial_state
+
+workstep isolation transform_isolate_declarations
+workstep test_isolation check_isolation
+
+workstep const transform_const
+workstep test_const check_const
