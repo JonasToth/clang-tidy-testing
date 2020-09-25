@@ -2,3 +2,4 @@
 .PHONY: test
 test:
 	bash src/workstep.bash
+	bash src/run_clang_tidy.bash
