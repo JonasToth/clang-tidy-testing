@@ -17,7 +17,7 @@
 #               If '${PROGRESS_DIR}' is empty, it will be the current directory.
 # @postcondition 
 workstep() {
-    step_name="${1}"
+    local step_name="${1}"
     if [ -z "${step_name}" ] ; then
         die "Name of workstep can not be empty"
     fi
@@ -25,12 +25,12 @@ workstep() {
         die "Only letters for step_name allowed (provided '${step_name}')"
     fi
 
-    function_to_call="${2}"
+    local function_to_call="${2}"
     if [ -z "${function_to_call}" ] ; then
         die "Function to call empty!"
     fi
 
-    step_file="${PROGRESS_DIR:="."}/.${step_name}"
+    local step_file="${PROGRESS_DIR:="."}/.${step_name}"
 
     if [ -e "${step_file}" ] && [ ! -f "${step_file}" ] ; then
         die "${step_file} exists, but not as classical file. Aborting!"
@@ -39,7 +39,7 @@ workstep() {
     # If the step has not been executed, do so.
     if [ ! -f "${step_file}" ] ; then
         ${function_to_call}
-        function_return=$?
+        local function_return=$?
 
         if [ "${function_return}" -eq 0 ]; then
             touch "${step_file}" || die "Could not create step file"
