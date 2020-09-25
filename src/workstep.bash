@@ -70,7 +70,8 @@ cleanup() {
 }
 trap "cleanup" EXIT
 
-    echo "+ Running unit tests for this file!"
+    echo
+    echo "+ Running unit tests for $0!"
     echo
 
     if (workstep "") ; then
