@@ -23,7 +23,7 @@ __execute_run_clang_tidy() {
     return $?
 }
 
-# @brief Use ${RUN_CLANG_TIDY} in ${SRC_DIR}.
+# @brief Use ${RUN_CLANG_TIDY}.
 #
 # The function wraps the execution of run-clang-tidy and
 # provides some customization points to control the behaviour.
@@ -38,7 +38,7 @@ run_clang_tidy() {
     return $?
 }
 
-# @brief Use ${RUN_CLANG_TIDY} in ${SRC_DIR} and apply fixes, too.
+# @brief Use ${RUN_CLANG_TIDY} and apply fixes, too.
 # @note Same arguments as 'run_clang_tidy'
 run_clang_tidy_fix() {
     local checks="$1"
