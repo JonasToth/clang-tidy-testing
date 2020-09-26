@@ -7,20 +7,29 @@
 # This code transformation for LLVM includes multiple steps and potential
 # manual patching. Each stage is verified with `ninja check-all`.
 
-: "${CLANG_TIDY_LIB:=/data/big/clang-tidy-testing/src}"
-: "${RUN_CLANG_TIDY:=/data/big/llvm-project/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py}"
-: "${CLANG_TIDY:=/data/big/dev-build/bin/clang-tidy}"
-
 : "${SOURCE_DIR:=/data/big/llvm-project}"
 : "${BINARY_DIR:=/data/big/dev-build}"
 : "${TEST_BUILD:=/data/big/test-build}"
+
+: "${CLANG_TIDY_LIB:=/data/big/clang-tidy-testing/src}"
+: "${RUN_CLANG_TIDY:=${SOURCE_DIR}/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py}"
+: "${CLANG_TIDY:=${BINARY_DIR}/bin/clang-tidy}"
 
 : "${GIT_TAG:=llvmorg-11.0.0-rc3}"
 : "${BASE_REV:=$(cd ${SOURCE_DIR} && git checkout "${GIT_TAG}" > /dev/null 2>&1 && git rev-parse HEAD | cut -c -12)}"
 : "${BRANCH_NAME:=transform_${BASE_REV}}"
 : "${LOG_DIR:=/data/big/transformation/${BASE_REV}}"
+: "${PROGRESS_DIR:=${LOG_DIR}}"
 
-: "${TRANSFORM_DIRS:=clang/lib/Analysis}"
+: "${TRANSFORM_DIRS:=lib/}"
+
+shutdown() {
+  # Get our process group id
+
+  exit 1
+}
+
+trap "shutdown" SIGINT SIGTERM
 
 if [ ! -d "${LOG_DIR}" ] ; then
     mkdir -p "${LOG_DIR}"
@@ -54,12 +63,12 @@ fi
 check_initial_state() {
     log_info "Test if everything is alright to start with"
     cd "${TEST_BUILD}" || die "Can't change into test directory"
-    ninja clean
     ninja check-all > "${LOG_DIR}/before_everything.log" 2> "${LOG_DIR}/before_everything.err" ||
         {
             log_error "Base-Revision is broken!"
             exit 1
         }
+    return 0
 }
 
 
@@ -67,57 +76,58 @@ transform_isolate_declarations() {
     log_info "Isolate Transformation"
     log_info "Check ${LOG_DIR}/isolate_decl.{log,err} for information on the execution."
 
-    python2 "${RUN_CLANG_TIDY}" \
-        -clang-tidy-binary "${BINARY_DIR}/bin/clang-tidy" \
-        "-checks=-*,readability-isolate-declaration" \
-        -fix \
+    cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
+    run_clang_tidy_fix readability-isolate-declaration \
+        -clang-apply-replacements-binary "${BINARY_DIR}/bin/clang-apply-replacements" \
         -p "${TEST_BUILD}" \
-        -quiet \
-        ${TRANSFORM_DIRS} > "${LOG_DIR}/isolate_decl.log" 2> "${LOG_DIR}/isolate_decl.err"
+        ${TRANSFORM_DIRS} \
+        > "${LOG_DIR}/isolate_decl.log" \
+        2> "${LOG_DIR}/isolate_decl.err"
 
     log_info "Commiting automatic refactoring"
-    cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
     git commit -am "[Refactor] automatically isolate all declarations"
+    return 0
 }
 
 
 check_isolation() {
     log_info "Testing if build is still ok"
     cd "${TEST_BUILD}" || die "Can't switch into ${TEST_BUILD}"
-    ninja clean
     ninja check-all > "${LOG_DIR}/test_after_isolation.log" 2> "${LOG_DIR}/test_after_isolation.err" ||
         {
             log_error "Isolating all Declaration causes test-breakage!"
             exit 1
         }
+    return 0
 }
 
 
 transform_const() {
     log_info "Const Transformation"
-    python2 "${RUN_CLANG_TIDY}" \
-        -clang-tidy-binary "${BINARY_DIR}/bin/clang-tidy" \
-        "-checks=-*,cppcoreguidelines-const-correctness" \
-        -fix \
+
+    cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
+    run_clang_tidy_fix cppcoreguidelines-const-correctness \
+        -clang-apply-replacements-binary "${BINARY_DIR}/bin/clang-apply-replacements" \
         -p "${TEST_BUILD}" \
-        -quiet \
-        ${TRANSFORM_DIRS} > "${LOG_DIR}/const-correctness.log" 2> "${LOG_DIR}/const-correctness.err"
+        ${TRANSFORM_DIRS} \
+        > "${LOG_DIR}/const-correctness.log" \
+        2> "${LOG_DIR}/const-correctness.err"
 
     log_info "Commiting automatic refactoring"
-    cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
     git commit -am "[Refactor] automatically declare everything const"
+    return 0
 }
 
 
 check_const() {
     log_info "Testing if still runs"
     cd "${TEST_BUILD}" || die "Can't switch into ${TEST_BUILD}"
-    ninja clean
     ninja check-all > "${LOG_DIR}/test_after_const.log" 2> "${LOG_DIR}/test_after_const.err" ||
         {
             log_error "Const Transformation causes test breakage!"
             exit 1
         }
+    return 0
 }
 
 workstep test_initial check_initial_state
