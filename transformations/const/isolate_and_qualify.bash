@@ -120,7 +120,6 @@ transform_const() {
 }
 
 fixup_const_transform() {
-
     log_info "Manual Patching of known issues"
     cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
     patch -p1 < "${CLANG_TIDY_LIB}/../transformations/const/deduplication.patch" || die "Patch 1 does not apply"
@@ -150,3 +149,7 @@ workstep test_isolation check_isolation
 workstep const transform_const
 workstep fix_const fixup_const_transform
 workstep test_const check_const
+
+log_info "+++++++++++++++++++++++++++++++++++++++++++++++"
+log_info "Transformation succeeded without code-breakage!"
+log_info "+++++++++++++++++++++++++++++++++++++++++++++++"

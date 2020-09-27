@@ -43,9 +43,14 @@ workstep() {
 
         if [ "${function_return}" -eq 0 ]; then
             touch "${step_file}" || die "Could not create step file"
+            log_info "Workstep ${step_name} succeeded"
+        else
+            log_error "Workstep ${step_name} failed!"
         fi
 
         return ${function_return}
+    else
+        log_info "Workstep ${step_name} is cached, skipping processing"
     fi
 
     return 0
