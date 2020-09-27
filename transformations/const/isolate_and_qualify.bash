@@ -93,6 +93,7 @@ transform_isolate_declarations() {
 check_isolation() {
     log_info "Testing if build is still ok"
     cd "${TEST_BUILD}" || die "Can't switch into ${TEST_BUILD}"
+    ninja
     ninja check-all > "${LOG_DIR}/test_after_isolation.log" 2> "${LOG_DIR}/test_after_isolation.err" ||
         {
             log_error "Isolating all Declaration causes test-breakage!"
@@ -133,6 +134,7 @@ fixup_const_transform() {
 check_const() {
     log_info "Testing if still runs"
     cd "${TEST_BUILD}" || die "Can't switch into ${TEST_BUILD}"
+    ninja
     ninja check-all > "${LOG_DIR}/test_after_const.log" 2> "${LOG_DIR}/test_after_const.err" ||
         {
             log_error "Const Transformation causes test breakage!"
