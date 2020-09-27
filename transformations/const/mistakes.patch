@@ -48,21 +48,6 @@ index 66e7f2ccb98..62ed519cdc1 100644
        unsigned Reg;
        ParseRes = ParseVector(Reg, NextKind, getLoc(), true);
        if (ParseRes != MatchOperand_Success)
-diff --git a/llvm/lib/Target/X86/X86ISelLowering.cpp b/llvm/lib/Target/X86/X86ISelLowering.cpp
-index 80744831cdd..989b6ea1164 100644
---- a/llvm/lib/Target/X86/X86ISelLowering.cpp
-+++ b/llvm/lib/Target/X86/X86ISelLowering.cpp
-@@ -13577,8 +13577,8 @@ static SDValue lowerShuffleAsPermuteAndUnpack(
-   bool UnpackLo = NumLoInputs >= NumHiInputs;
- 
-   auto TryUnpack = [&](int ScalarSize, int Scale) {
--    SmallVector<int, 16> const V1Mask((unsigned)Size, -1);
--    SmallVector<int, 16> const V2Mask((unsigned)Size, -1);
-+    SmallVector<int, 16> V1Mask((unsigned)Size, -1);
-+    SmallVector<int, 16> V2Mask((unsigned)Size, -1);
- 
-     for (int i = 0; i < Size; ++i) {
-       if (Mask[i] < 0)
 diff --git a/llvm/lib/Transforms/IPO/OpenMPOpt.cpp b/llvm/lib/Transforms/IPO/OpenMPOpt.cpp
 index 40fbb64ca13..b816ca2f74a 100644
 --- a/llvm/lib/Transforms/IPO/OpenMPOpt.cpp
