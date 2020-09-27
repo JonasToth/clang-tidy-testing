@@ -17,37 +17,6 @@ index c1cd11ad2d0..0a9fc261555 100644
    if (Error E = createSymtab(*NewSymtab.get()))
      return E;
  
-diff --git a/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp b/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp
-index 66e7f2ccb98..62ed519cdc1 100644
---- a/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp
-+++ b/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp
-@@ -3362,7 +3362,7 @@ AArch64AsmParser::tryParseVectorList(OperandVector &Operands,
-   auto const LCurly = Parser.getTok();
-   Parser.Lex(); // Eat left bracket token.
- 
--  StringRef const Kind;
-+  StringRef Kind;
-   unsigned FirstReg;
-   auto ParseRes = ParseVector(FirstReg, Kind, getLoc(), ExpectMatch);
- 
-@@ -3379,7 +3379,7 @@ AArch64AsmParser::tryParseVectorList(OperandVector &Operands,
- 
-   if (parseOptionalToken(AsmToken::Minus)) {
-     SMLoc const Loc = getLoc();
--    StringRef const NextKind;
-+    StringRef NextKind;
- 
-     unsigned Reg;
-     ParseRes = ParseVector(Reg, NextKind, getLoc(), true);
-@@ -3404,7 +3404,7 @@ AArch64AsmParser::tryParseVectorList(OperandVector &Operands,
-   else {
-     while (parseOptionalToken(AsmToken::Comma)) {
-       SMLoc const Loc = getLoc();
--      StringRef const NextKind;
-+      StringRef NextKind;
-       unsigned Reg;
-       ParseRes = ParseVector(Reg, NextKind, getLoc(), true);
-       if (ParseRes != MatchOperand_Success)
 diff --git a/llvm/lib/Transforms/IPO/OpenMPOpt.cpp b/llvm/lib/Transforms/IPO/OpenMPOpt.cpp
 index 40fbb64ca13..b816ca2f74a 100644
 --- a/llvm/lib/Transforms/IPO/OpenMPOpt.cpp
