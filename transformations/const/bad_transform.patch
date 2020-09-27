@@ -1,0 +1,106 @@
+commit 114c3fc041bd8ff9d19989251c6c0146b0918e54
+Author: Jonas Toth <development@jonas-toth.eu>
+Date:   Sun Sep 27 11:39:22 2020 +0200
+
+    [Fix] clang-tidy check imprecision
+
+diff --git a/clang/lib/StaticAnalyzer/Core/ExprEngineC.cpp b/clang/lib/StaticAnalyzer/Core/ExprEngineC.cpp
+index 13ceb884712..ce22415ab7b 100644
+--- a/clang/lib/StaticAnalyzer/Core/ExprEngineC.cpp
++++ b/clang/lib/StaticAnalyzer/Core/ExprEngineC.cpp
+@@ -1104,7 +1104,7 @@ void ExprEngine::VisitIncrementDecrementOperator(const UnaryOperator* U,
+ 
+       continue;
+     }
+-    DefinedSVal const V2 = V2_untested.castAs<DefinedSVal>();
++    DefinedSVal V2 = V2_untested.castAs<DefinedSVal>();
+ 
+     // Handle all other values.
+     BinaryOperator::Opcode const Op = U->isIncrementOp() ? BO_Add : BO_Sub;
+diff --git a/llvm/lib/Target/BPF/BPFMISimplifyPatchable.cpp b/llvm/lib/Target/BPF/BPFMISimplifyPatchable.cpp
+index 9b1e8f5346e..9dce8ab1691 100644
+--- a/llvm/lib/Target/BPF/BPFMISimplifyPatchable.cpp
++++ b/llvm/lib/Target/BPF/BPFMISimplifyPatchable.cpp
+@@ -97,8 +97,8 @@ void BPFMISimplifyPatchable::checkADDrr(MachineRegisterInfo *MRI,
+ 
+   // Go through all uses of %1 as in %1 = ADD_rr %2, %3
+   const MachineOperand Op0 = Inst->getOperand(0);
+-  auto const Begin = MRI->use_begin(Op0.getReg());
+-  auto const End = MRI->use_end();
++  auto Begin = MRI->use_begin(Op0.getReg());
++  auto End = MRI->use_end();
+   decltype(End) NextI;
+   for (auto I = Begin; I != End; I = NextI) {
+     NextI = std::next(I);
+@@ -168,8 +168,8 @@ void BPFMISimplifyPatchable::processCandidate(MachineRegisterInfo *MRI,
+       //  %3:gpr = SUBREG_TO_REG 0, %2:gpr32, %subreg.sub_32
+       //  %4:gpr = ADD_rr %0:gpr, %3:gpr
+       //  or similar patterns below for non-alu32 case.
+-      auto const Begin = MRI->use_begin(DstReg);
+-      auto const End = MRI->use_end();
++      auto Begin = MRI->use_begin(DstReg);
++      auto End = MRI->use_end();
+       decltype(End) NextI;
+       for (auto I = Begin; I != End; I = NextI) {
+         NextI = std::next(I);
+@@ -196,8 +196,8 @@ void BPFMISimplifyPatchable::processCandidate(MachineRegisterInfo *MRI,
+ void BPFMISimplifyPatchable::processDstReg(MachineRegisterInfo *MRI,
+     Register &DstReg, Register &SrcReg, const GlobalValue *GVal,
+     bool doSrcRegProp, bool IsAma) {
+-  auto const Begin = MRI->use_begin(DstReg);
+-  auto const End = MRI->use_end();
++  auto Begin = MRI->use_begin(DstReg);
++  auto End = MRI->use_end();
+   decltype(End) NextI;
+   for (auto I = Begin; I != End; I = NextI) {
+     NextI = std::next(I);
+diff --git a/llvm/lib/Target/Hexagon/HexagonBitSimplify.cpp b/llvm/lib/Target/Hexagon/HexagonBitSimplify.cpp
+index 132262b3008..6baab0f5be2 100644
+--- a/llvm/lib/Target/Hexagon/HexagonBitSimplify.cpp
++++ b/llvm/lib/Target/Hexagon/HexagonBitSimplify.cpp
+@@ -356,8 +356,8 @@ bool HexagonBitSimplify::replaceReg(unsigned OldR, unsigned NewR,
+       MachineRegisterInfo &MRI) {
+   if (!Register::isVirtualRegister(OldR) || !Register::isVirtualRegister(NewR))
+     return false;
+-  auto const Begin = MRI.use_begin(OldR);
+-  auto const End = MRI.use_end();
++  auto Begin = MRI.use_begin(OldR);
++  auto End = MRI.use_end();
+   decltype(End) NextI;
+   for (auto I = Begin; I != End; I = NextI) {
+     NextI = std::next(I);
+@@ -372,8 +372,8 @@ bool HexagonBitSimplify::replaceRegWithSub(unsigned OldR, unsigned NewR,
+     return false;
+   if (hasTiedUse(OldR, MRI, NewSR))
+     return false;
+-  auto const Begin = MRI.use_begin(OldR);
+-  auto const End = MRI.use_end();
++  auto Begin = MRI.use_begin(OldR);
++  auto End = MRI.use_end();
+   decltype(End) NextI;
+   for (auto I = Begin; I != End; I = NextI) {
+     NextI = std::next(I);
+@@ -389,8 +389,8 @@ bool HexagonBitSimplify::replaceSubWithSub(unsigned OldR, unsigned OldSR,
+     return false;
+   if (OldSR != NewSR && hasTiedUse(OldR, MRI, NewSR))
+     return false;
+-  auto const Begin = MRI.use_begin(OldR);
+-  auto const End = MRI.use_end();
++  auto Begin = MRI.use_begin(OldR);
++  auto End = MRI.use_end();
+   decltype(End) NextI;
+   for (auto I = Begin; I != End; I = NextI) {
+     NextI = std::next(I);
+diff --git a/llvm/tools/llvm-exegesis/lib/LlvmState.cpp b/llvm/tools/llvm-exegesis/lib/LlvmState.cpp
+index 1ed30e7afc3..6022133a819 100644
+--- a/llvm/tools/llvm-exegesis/lib/LlvmState.cpp
++++ b/llvm/tools/llvm-exegesis/lib/LlvmState.cpp
+@@ -60,7 +60,7 @@ std::unique_ptr<LLVMTargetMachine> LLVMState::createTargetMachine() const {
+ }
+ 
+ bool LLVMState::canAssemble(const MCInst &Inst) const {
+-  MCObjectFileInfo const ObjectFileInfo;
++  MCObjectFileInfo const ObjectFileInfo{};
+   MCContext Context(TheTargetMachine->getMCAsmInfo(),
+                     TheTargetMachine->getMCRegisterInfo(), &ObjectFileInfo);
+   std::unique_ptr<const MCCodeEmitter> const CodeEmitter(

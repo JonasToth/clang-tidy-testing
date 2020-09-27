@@ -1,0 +1,623 @@
+diff --git a/clang/lib/AST/ASTImporter.cpp b/clang/lib/AST/ASTImporter.cpp
+index 7a573ca127e..fed2602e609 100644
+--- a/clang/lib/AST/ASTImporter.cpp
++++ b/clang/lib/AST/ASTImporter.cpp
+@@ -221,7 +221,7 @@ namespace clang {
+       // There may be several overloads of ToDeclT::Create. We must make sure
+       // to call the one which would be chosen by the arguments, thus we use a
+       // wrapper for the overload set.
+-      CallOverloadedCreateFun<ToDeclT> const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const OC;
++      CallOverloadedCreateFun<ToDeclT> const OC;
+       return GetImportedOrCreateSpecialDecl(ToD, OC, FromD,
+                                             std::forward<Args>(args)...);
+     }
+@@ -234,7 +234,7 @@ namespace clang {
+               typename... Args>
+     LLVM_NODISCARD bool GetImportedOrCreateDecl(ToDeclT *&ToD, FromDeclT *FromD,
+                                                 Args &&... args) {
+-      CallOverloadedCreateFun<NewDeclT> const const const const const const const OC;
++      CallOverloadedCreateFun<NewDeclT> const OC;
+       return GetImportedOrCreateSpecialDecl(ToD, OC, FromD,
+                                             std::forward<Args>(args)...);
+     }
+diff --git a/clang/lib/AST/Interp/ByteCodeExprGen.cpp b/clang/lib/AST/Interp/ByteCodeExprGen.cpp
+index b8d327920bd..c1569dde081 100644
+--- a/clang/lib/AST/Interp/ByteCodeExprGen.cpp
++++ b/clang/lib/AST/Interp/ByteCodeExprGen.cpp
+@@ -207,13 +207,13 @@ bool ByteCodeExprGen<Emitter>::VisitBinaryOperator(const BinaryOperator *BO) {
+ 
+ template <class Emitter>
+ bool ByteCodeExprGen<Emitter>::discard(const Expr *E) {
+-  OptionScope<Emitter> const const Scope(this, /*discardResult=*/true);
++  OptionScope<Emitter> const Scope(this, /*discardResult=*/true);
+   return this->Visit(E);
+ }
+ 
+ template <class Emitter>
+ bool ByteCodeExprGen<Emitter>::visit(const Expr *E) {
+-  OptionScope<Emitter> const const Scope(this, /*discardResult=*/false);
++  OptionScope<Emitter> const Scope(this, /*discardResult=*/false);
+   return this->Visit(E);
+ }
+ 
+@@ -463,7 +463,7 @@ ByteCodeExprGen<Emitter>::allocateLocal(DeclTy &&Src, bool IsExtended) {
+ template <class Emitter>
+ bool ByteCodeExprGen<Emitter>::visitInitializer(
+     const Expr *Init, InitFnRef InitFn) {
+-  OptionScope<Emitter> const const Scope(this, InitFn);
++  OptionScope<Emitter> const Scope(this, InitFn);
+   return this->Visit(Init);
+ }
+ 
+@@ -517,7 +517,7 @@ Record *ByteCodeExprGen<Emitter>::getRecord(const RecordDecl *RD) {
+ 
+ template <class Emitter>
+ bool ByteCodeExprGen<Emitter>::visitExpr(const Expr *Exp) {
+-  ExprScope<Emitter> const const RootScope(this);
++  ExprScope<Emitter> const RootScope(this);
+   if (!visit(Exp))
+     return false;
+ 
+@@ -535,7 +535,7 @@ bool ByteCodeExprGen<Emitter>::visitDecl(const VarDecl *VD) {
+     if (Optional<PrimType> T = classify(VD->getType())) {
+       {
+         // Primitive declarations - compute the value and set it.
+-        DeclScope<Emitter> const const LocalScope(this, VD);
++        DeclScope<Emitter> const LocalScope(this, VD);
+         if (!visit(Init))
+           return false;
+       }
+@@ -549,7 +549,7 @@ bool ByteCodeExprGen<Emitter>::visitDecl(const VarDecl *VD) {
+     } else {
+       {
+         // Composite declarations - allocate storage and initialize it.
+-        DeclScope<Emitter> const const LocalScope(this, VD);
++        DeclScope<Emitter> const LocalScope(this, VD);
+         if (!visitGlobalInitializer(Init, *I))
+           return false;
+       }
+diff --git a/clang/lib/AST/ParentMapContext.cpp b/clang/lib/AST/ParentMapContext.cpp
+index ac72a94c9c8..1ab5a2c7d16 100644
+--- a/clang/lib/AST/ParentMapContext.cpp
++++ b/clang/lib/AST/ParentMapContext.cpp
+@@ -86,7 +86,7 @@ class ParentMapContext::ParentMap {
+   template <typename NodeTy, typename MapTy>
+   static DynTypedNodeList getDynNodeFromMap(const NodeTy &Node,
+                                                         const MapTy &Map) {
+-    auto const const I = Map.find(Node);
++    auto const I = Map.find(Node);
+     if (I == Map.end()) {
+       return llvm::ArrayRef<DynTypedNode>();
+     }
+diff --git a/clang/lib/CodeGen/CGExprCXX.cpp b/clang/lib/CodeGen/CGExprCXX.cpp
+index 5a3ddb641b3..b289821cc78 100644
+--- a/clang/lib/CodeGen/CGExprCXX.cpp
++++ b/clang/lib/CodeGen/CGExprCXX.cpp
+@@ -1467,7 +1467,7 @@ namespace {
+ 
+       // Pass the rest of the arguments, which must match exactly.
+       for (unsigned I = 0; I != NumPlacementArgs; ++I) {
+-        auto const const Arg = getPlacementArgs()[I];
++        auto const Arg = getPlacementArgs()[I];
+         DeleteArgs.add(Traits::get(CGF, Arg.ArgValue), Arg.ArgType);
+       }
+ 
+diff --git a/clang/lib/CodeGen/CGNonTrivialStruct.cpp b/clang/lib/CodeGen/CGNonTrivialStruct.cpp
+index 6ddb6011e92..5a632cee570 100644
+--- a/clang/lib/CodeGen/CGNonTrivialStruct.cpp
++++ b/clang/lib/CodeGen/CGNonTrivialStruct.cpp
+@@ -480,7 +480,7 @@ template <class Derived> struct GenFuncBase {
+     CodeGenFunction NewCGF(CGM);
+     setCGF(&NewCGF);
+     CGF->StartFunction(FD, Ctx.VoidTy, F, FI, Args);
+-    std::array<Address, N> const const Addrs =
++    std::array<Address, N> const Addrs =
+         getParamAddrs<N>(std::make_index_sequence<N>{}, Alignments, Args, CGF);
+     asDerived().visitStructFields(QT, CharUnits::Zero(), Addrs);
+     CGF->FinishFunction();
+diff --git a/clang/lib/Sema/Sema.cpp b/clang/lib/Sema/Sema.cpp
+index 043a4fe2f4e..56a32552710 100644
+--- a/clang/lib/Sema/Sema.cpp
++++ b/clang/lib/Sema/Sema.cpp
+@@ -2408,7 +2408,7 @@ std::string Sema::getOpenCLExtensionsFromTypeExtMap(FunctionType *FT) {
+ 
+ template <typename T, typename MapT>
+ std::string Sema::getOpenCLExtensionsFromExtMap(T *FDT, MapT &Map) {
+-  auto const const Loc = Map.find(FDT);
++  auto const Loc = Map.find(FDT);
+   return llvm::join(Loc->second, " ");
+ }
+ 
+@@ -2428,7 +2428,7 @@ bool Sema::checkOpenCLDisabledTypeOrDecl(T D, DiagLocT DiagLoc,
+                                          DiagInfoT DiagInfo, MapT &Map,
+                                          unsigned Selector,
+                                          SourceRange SrcRange) {
+-  auto const const Loc = Map.find(D);
++  auto const Loc = Map.find(D);
+   if (Loc == Map.end())
+     return false;
+   bool Disabled = false;
+diff --git a/clang/lib/Sema/SemaDeclAttr.cpp b/clang/lib/Sema/SemaDeclAttr.cpp
+index 67993359c60..5bda94163fd 100644
+--- a/clang/lib/Sema/SemaDeclAttr.cpp
++++ b/clang/lib/Sema/SemaDeclAttr.cpp
+@@ -2546,7 +2546,7 @@ static T *mergeVisibilityAttr(Sema &S, Decl *D, const AttributeCommonInfo &CI,
+                               typename T::VisibilityType value) {
+   T *existingAttr = D->getAttr<T>();
+   if (existingAttr) {
+-    typename T::VisibilityType const const existingValue = existingAttr->getVisibility();
++    typename T::VisibilityType const existingValue = existingAttr->getVisibility();
+     if (existingValue == value)
+       return nullptr;
+     S.Diag(existingAttr->getLocation(), diag::err_mismatched_visibility);
+diff --git a/clang/lib/Sema/SemaExprObjC.cpp b/clang/lib/Sema/SemaExprObjC.cpp
+index 8be4247ee98..4cce1e86da0 100644
+--- a/clang/lib/Sema/SemaExprObjC.cpp
++++ b/clang/lib/Sema/SemaExprObjC.cpp
+@@ -915,7 +915,7 @@ CheckObjCDictionaryLiteralDuplicateKeys(Sema &S,
+   std::map<llvm::APSInt, SourceLocation, APSIntCompare> IntegralKeys;
+ 
+   auto checkOneKey = [&](auto &Map, const auto &Key, SourceLocation Loc) {
+-    auto const const Pair = Map.insert({Key, Loc});
++    auto Pair = Map.insert({Key, Loc});
+     if (!Pair.second) {
+       S.Diag(Loc, diag::warn_nsdictionary_duplicate_key);
+       S.Diag(Pair.first->second, diag::note_nsdictionary_duplicate_key_here);
+diff --git a/clang/lib/StaticAnalyzer/Checkers/GenericTaintChecker.cpp b/clang/lib/StaticAnalyzer/Checkers/GenericTaintChecker.cpp
+index 414ea08665b..5c59b77b8f7 100644
+--- a/clang/lib/StaticAnalyzer/Checkers/GenericTaintChecker.cpp
++++ b/clang/lib/StaticAnalyzer/Checkers/GenericTaintChecker.cpp
+@@ -403,8 +403,8 @@ void GenericTaintChecker::parseConfiguration(CheckerManager &Mgr,
+ template <typename T>
+ auto GenericTaintChecker::findFunctionInConfig(const ConfigDataMap<T> &Map,
+                                                const FunctionData &FData) {
+-  auto const const Range = Map.equal_range(std::string(FData.Name));
+-  auto const const It =
++  auto const Range = Map.equal_range(std::string(FData.Name));
++  auto const It =
+       std::find_if(Range.first, Range.second, [&FData](const auto &Entry) {
+         const auto &Value = Entry.second;
+         StringRef const Scope = Value.first;
+diff --git a/clang/lib/StaticAnalyzer/Core/BugReporter.cpp b/clang/lib/StaticAnalyzer/Core/BugReporter.cpp
+index 66c194eb458..d16cbf4cc46 100644
+--- a/clang/lib/StaticAnalyzer/Core/BugReporter.cpp
++++ b/clang/lib/StaticAnalyzer/Core/BugReporter.cpp
+@@ -2227,7 +2227,7 @@ template <class T>
+ static void insertToInterestingnessMap(
+     llvm::DenseMap<T, bugreporter::TrackingKind> &InterestingnessMap, T Val,
+     bugreporter::TrackingKind TKind) {
+-  auto const const Result = InterestingnessMap.insert({Val, TKind});
++  auto const Result = InterestingnessMap.insert({Val, TKind});
+ 
+   if (Result.second)
+     return;
+diff --git a/clang/lib/StaticAnalyzer/Core/CheckerManager.cpp b/clang/lib/StaticAnalyzer/Core/CheckerManager.cpp
+index acddafcfc46..9c3303fb8ef 100644
+--- a/clang/lib/StaticAnalyzer/Core/CheckerManager.cpp
++++ b/clang/lib/StaticAnalyzer/Core/CheckerManager.cpp
+@@ -118,7 +118,7 @@ static void expandGraphWithCheckers(CHECK_CTX checkCtx,
+   typename CHECK_CTX::CheckersTy::const_iterator
+       I = checkCtx.checkers_begin();
+   typename CHECK_CTX::CheckersTy::const_iterator
+-      const const const const const const const const E = checkCtx.checkers_end();
++      const E = checkCtx.checkers_end();
+   if (I == E) {
+     Dst.insert(Src);
+     return;
+diff --git a/llvm/lib/Analysis/MemoryDependenceAnalysis.cpp b/llvm/lib/Analysis/MemoryDependenceAnalysis.cpp
+index e203c5d6cd4..44fad461df0 100644
+--- a/llvm/lib/Analysis/MemoryDependenceAnalysis.cpp
++++ b/llvm/lib/Analysis/MemoryDependenceAnalysis.cpp
+@@ -98,7 +98,7 @@ template <typename KeyTy>
+ static void
+ RemoveFromReverseMap(DenseMap<Instruction *, SmallPtrSet<KeyTy, 4>> &ReverseMap,
+                      Instruction *Inst, KeyTy Val) {
+-  typename DenseMap<Instruction *, SmallPtrSet<KeyTy, 4>>::iterator const const const InstIt =
++  typename DenseMap<Instruction *, SmallPtrSet<KeyTy, 4>>::iterator const InstIt =
+       ReverseMap.find(Inst);
+   assert(InstIt != ReverseMap.end() && "Reverse map out of sync?");
+   bool const Found = InstIt->second.erase(Val);
+diff --git a/llvm/lib/Analysis/MemorySSA.cpp b/llvm/lib/Analysis/MemorySSA.cpp
+index aa71ce2a8b5..370a84e2b97 100644
+--- a/llvm/lib/Analysis/MemorySSA.cpp
++++ b/llvm/lib/Analysis/MemorySSA.cpp
+@@ -660,7 +660,7 @@ template <class AliasAnalysisType> class ClobberWalker {
+         SkipStopWhere = Query->OriginalAccess;
+       }
+ 
+-      UpwardsWalkResult const const Res = walkToPhiOrClobber(Node,
++      UpwardsWalkResult const Res = walkToPhiOrClobber(Node,
+                                                  /*StopAt=*/StopWhere,
+                                                  /*SkipStopAt=*/SkipStopWhere);
+       if (Res.IsKnownClobber) {
+@@ -812,12 +812,12 @@ template <class AliasAnalysisType> class ClobberWalker {
+ 
+         // Find the node we started at. We can't search based on N->Last, since
+         // we may have gone around a loop with a different MemoryLocation.
+-        auto const const Iter = find_if(def_path(Blocker->LastNode), [&](const DefPath &N) {
++        auto const Iter = find_if(def_path(Blocker->LastNode), [&](const DefPath &N) {
+           return defPathIndex(N) < PriorPathsSize;
+         });
+         assert(Iter != def_path_iterator());
+ 
+-        DefPath  const const&CurNode = *Iter;
++        DefPath  const&CurNode = *Iter;
+         assert(CurNode.Last == Current);
+ 
+         // Two things:
+@@ -845,7 +845,7 @@ template <class AliasAnalysisType> class ClobberWalker {
+         //    the bottom part of D to the cached clobber, ignoring the clobber
+         //    in N. Again, this problem goes away if we start tracking all
+         //    blockers for a given phi optimization.
+-        TerminatedPath const const Result{CurNode.Last, defPathIndex(CurNode)};
++        TerminatedPath const Result{CurNode.Last, defPathIndex(CurNode)};
+         return {Result, {}};
+       }
+ 
+@@ -854,14 +854,14 @@ template <class AliasAnalysisType> class ClobberWalker {
+       // the rest to be cached back.
+       if (NewPaused.empty()) {
+         MoveDominatedPathToEnd(TerminatedPaths);
+-        TerminatedPath const const Result = TerminatedPaths.pop_back_val();
++        TerminatedPath const Result = TerminatedPaths.pop_back_val();
+         return {Result, std::move(TerminatedPaths)};
+       }
+ 
+       MemoryAccess *DefChainEnd = nullptr;
+       SmallVector<TerminatedPath, 4> Clobbers;
+       for (ListIndex const Paused : NewPaused) {
+-        UpwardsWalkResult const const WR = walkToPhiOrClobber(Paths[Paused]);
++        UpwardsWalkResult const WR = walkToPhiOrClobber(Paths[Paused]);
+         if (WR.IsKnownClobber)
+           Clobbers.push_back({WR.Result, Paused});
+         else
+@@ -892,7 +892,7 @@ template <class AliasAnalysisType> class ClobberWalker {
+       // and quit.
+       if (!Clobbers.empty()) {
+         MoveDominatedPathToEnd(Clobbers);
+-        TerminatedPath const const Result = Clobbers.pop_back_val();
++        TerminatedPath const Result = Clobbers.pop_back_val();
+         return {Result, std::move(Clobbers)};
+       }
+ 
+@@ -947,13 +947,13 @@ public:
+     DefPath FirstDesc(Q.StartingLoc, Current, Current, None);
+     // Fast path for the overly-common case (no crazy phi optimization
+     // necessary)
+-    UpwardsWalkResult const const WalkResult = walkToPhiOrClobber(FirstDesc);
++    UpwardsWalkResult const WalkResult = walkToPhiOrClobber(FirstDesc);
+     MemoryAccess *Result;
+     if (WalkResult.IsKnownClobber) {
+       Result = WalkResult.Result;
+       Q.AR = WalkResult.AR;
+     } else {
+-      OptznResult const const OptRes = tryOptimizePhi(cast<MemoryPhi>(FirstDesc.Last),
++      OptznResult const OptRes = tryOptimizePhi(cast<MemoryPhi>(FirstDesc.Last),
+                                           Current, Q.StartingLoc);
+       verifyOptResult(OptRes);
+       resetPhiOptznState();
+diff --git a/llvm/lib/Analysis/MemorySSAUpdater.cpp b/llvm/lib/Analysis/MemorySSAUpdater.cpp
+index 7cecc196d40..4a63d0569fc 100644
+--- a/llvm/lib/Analysis/MemorySSAUpdater.cpp
++++ b/llvm/lib/Analysis/MemorySSAUpdater.cpp
+@@ -220,7 +220,7 @@ MemoryAccess *MemorySSAUpdater::tryRemoveTrivialPhi(MemoryPhi *Phi,
+ 
+   // Detect equal or self arguments
+   MemoryAccess *Same = nullptr;
+-  for (auto  const const&Op : Operands) {
++  for (auto  const&Op : Operands) {
+     // If the same or self, good so far
+     if (Op == Phi || Op == Same)
+       continue;
+diff --git a/llvm/lib/Analysis/StackSafetyAnalysis.cpp b/llvm/lib/Analysis/StackSafetyAnalysis.cpp
+index 8046083ca28..ac8f95f8c06 100644
+--- a/llvm/lib/Analysis/StackSafetyAnalysis.cpp
++++ b/llvm/lib/Analysis/StackSafetyAnalysis.cpp
+@@ -470,12 +470,12 @@ template <typename CalleeTy>
+ ConstantRange StackSafetyDataFlowAnalysis<CalleeTy>::getArgumentAccessRange(
+     const CalleeTy *Callee, unsigned ParamNo,
+     const ConstantRange &Offsets) const {
+-  auto const const FnIt = Functions.find(Callee);
++  auto const FnIt = Functions.find(Callee);
+   // Unknown callee (outside of LTO domain or an indirect call).
+   if (FnIt == Functions.end())
+     return UnknownRange;
+   auto &FS = FnIt->second;
+-  auto const const ParamIt = FS.Params.find(ParamNo);
++  auto const ParamIt = FS.Params.find(ParamNo);
+   if (ParamIt == FS.Params.end())
+     return UnknownRange;
+   auto &Access = ParamIt->second.Range;
+@@ -490,7 +490,7 @@ template <typename CalleeTy>
+ bool StackSafetyDataFlowAnalysis<CalleeTy>::updateOneUse(UseInfo<CalleeTy> &US,
+                                                          bool UpdateToFullSet) {
+   bool Changed = false;
+-  for (auto  const const&CS : US.Calls) {
++  for (auto  const&CS : US.Calls) {
+     assert(!CS.Offset.isEmptySet() &&
+            "Param range can't be empty-set, invalid offset range");
+ 
+@@ -530,11 +530,11 @@ void StackSafetyDataFlowAnalysis<CalleeTy>::updateOneNode(
+ template <typename CalleeTy>
+ void StackSafetyDataFlowAnalysis<CalleeTy>::runDataFlow() {
+   SmallVector<const CalleeTy *, 16> Callees;
+-  for (auto  const const&F : Functions) {
++  for (auto  const&F : Functions) {
+     Callees.clear();
+-    auto  const const&FS = F.second;
+-    for (auto  const const&KV : FS.Params)
+-      for (auto  const const&CS : KV.second.Calls)
++    auto  const&FS = F.second;
++    for (auto  const&KV : FS.Params)
++      for (auto  const&CS : KV.second.Calls)
+         Callees.push_back(CS.Callee);
+ 
+     llvm::sort(Callees);
+diff --git a/llvm/lib/Analysis/SyntheticCountsUtils.cpp b/llvm/lib/Analysis/SyntheticCountsUtils.cpp
+index 062d8a119d7..2286a23545b 100644
+--- a/llvm/lib/Analysis/SyntheticCountsUtils.cpp
++++ b/llvm/lib/Analysis/SyntheticCountsUtils.cpp
+@@ -62,7 +62,7 @@ void SyntheticCountsUtils<CallGraphType>::propagateFromSCC(
+   }
+ 
+   // Update the counts for the nodes in the SCC.
+-  for (auto  const const&Entry : AdditionalCounts)
++  for (auto  const&Entry : AdditionalCounts)
+     AddCount(Entry.first, Entry.second);
+ 
+   // Now update the counts for nodes outside the SCC.
+@@ -96,7 +96,7 @@ void SyntheticCountsUtils<CallGraphType>::propagate(const CallGraphType &CG,
+   // The callgraph-scc needs to be visited in top-down order for propagation.
+   // The scc iterator returns the scc in bottom-up order, so reverse the SCCs
+   // and call propagateFromSCC.
+-  for (auto  const const&SCC : reverse(SCCs))
++  for (auto  const&SCC : reverse(SCCs))
+     propagateFromSCC(SCC, GetProfCount, AddCount);
+ }
+ 
+diff --git a/llvm/lib/CodeGen/AsmPrinter/AccelTable.cpp b/llvm/lib/CodeGen/AsmPrinter/AccelTable.cpp
+index 29bc05c1d90..e37f3b8c19e 100644
+--- a/llvm/lib/CodeGen/AsmPrinter/AccelTable.cpp
++++ b/llvm/lib/CodeGen/AsmPrinter/AccelTable.cpp
+@@ -474,7 +474,7 @@ void Dwarf5AccelTableWriter<DataT>::emitAbbrevs() const {
+ 
+ template <typename DataT>
+ void Dwarf5AccelTableWriter<DataT>::emitEntry(const DataT &Entry) const {
+-  auto const const AbbrevIt = Abbreviations.find(Entry.getDieTag());
++  auto const AbbrevIt = Abbreviations.find(Entry.getDieTag());
+   assert(AbbrevIt != Abbreviations.end() &&
+          "Why wasn't this abbrev generated?");
+ 
+@@ -521,7 +521,7 @@ Dwarf5AccelTableWriter<DataT>::Dwarf5AccelTableWriter(
+              Contents.getUniqueNameCount()),
+       CompUnits(CompUnits), getCUIndexForEntry(std::move(getCUIndexForEntry)) {
+   DenseSet<uint32_t> const UniqueTags = getUniqueTags();
+-  SmallVector<AttributeEncoding, 2> const const UniformAttributes = getUniformAttributes();
++  SmallVector<AttributeEncoding, 2> const UniformAttributes = getUniformAttributes();
+ 
+   Abbreviations.reserve(UniqueTags.size());
+   for (uint32_t const Tag : UniqueTags)
+diff --git a/llvm/lib/DebugInfo/Symbolize/Symbolize.cpp b/llvm/lib/DebugInfo/Symbolize/Symbolize.cpp
+index de8ab0d6648..85052c0c129 100644
+--- a/llvm/lib/DebugInfo/Symbolize/Symbolize.cpp
++++ b/llvm/lib/DebugInfo/Symbolize/Symbolize.cpp
+@@ -298,7 +298,7 @@ Optional<ArrayRef<uint8_t>> getBuildID(const ELFFile<ELFT> *Obj) {
+     if (P.p_type != ELF::PT_NOTE)
+       continue;
+     Error Err = Error::success();
+-    for (auto const const const const N : Obj->notes(P, Err))
++    for (auto const N : Obj->notes(P, Err))
+       if (N.getType() == ELF::NT_GNU_BUILD_ID && N.getName() == ELF::ELF_NOTE_GNU)
+         return N.getDesc();
+     consumeError(std::move(Err));
+diff --git a/llvm/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldMachO.cpp b/llvm/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldMachO.cpp
+index cdcb855e287..bca00646625 100644
+--- a/llvm/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldMachO.cpp
++++ b/llvm/lib/ExecutionEngine/RuntimeDyld/RuntimeDyldMachO.cpp
+@@ -287,8 +287,8 @@ unsigned char *RuntimeDyldMachOCRTPBase<Impl>::processFDE(uint8_t *P,
+     return Ret;
+ 
+   P += 4;
+-  TargetPtrT const const FDELocation = readBytesUnaligned(P, sizeof(TargetPtrT));
+-  TargetPtrT const const NewLocation = FDELocation - DeltaForText;
++  TargetPtrT const FDELocation = readBytesUnaligned(P, sizeof(TargetPtrT));
++  TargetPtrT const NewLocation = FDELocation - DeltaForText;
+   writeBytesUnaligned(NewLocation, P, sizeof(TargetPtrT));
+ 
+   P += sizeof(TargetPtrT);
+@@ -299,8 +299,8 @@ unsigned char *RuntimeDyldMachOCRTPBase<Impl>::processFDE(uint8_t *P,
+   uint8_t const Augmentationsize = *P;
+   P += 1;
+   if (Augmentationsize != 0) {
+-    TargetPtrT const const LSDA = readBytesUnaligned(P, sizeof(TargetPtrT));
+-    TargetPtrT const const NewLSDA = LSDA - DeltaForEH;
++    TargetPtrT const LSDA = readBytesUnaligned(P, sizeof(TargetPtrT));
++    TargetPtrT const NewLSDA = LSDA - DeltaForEH;
+     writeBytesUnaligned(NewLSDA, P, sizeof(TargetPtrT));
+   }
+ 
+diff --git a/llvm/lib/ObjectYAML/CodeViewYAMLSymbols.cpp b/llvm/lib/ObjectYAML/CodeViewYAMLSymbols.cpp
+index 34a2dafbd54..b44684138be 100644
+--- a/llvm/lib/ObjectYAML/CodeViewYAMLSymbols.cpp
++++ b/llvm/lib/ObjectYAML/CodeViewYAMLSymbols.cpp
+@@ -583,7 +583,7 @@ static inline Expected<CodeViewYAML::SymbolRecord>
+ fromCodeViewSymbolImpl(CVSymbol Symbol) {
+   CodeViewYAML::SymbolRecord Result;
+ 
+-  auto const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const const Impl = std::make_shared<SymbolType>(Symbol.kind());
++  auto const Impl = std::make_shared<SymbolType>(Symbol.kind());
+   if (auto EC = Impl->fromCodeViewSymbol(Symbol))
+     return std::move(EC);
+   Result.Symbol = Impl;
+diff --git a/llvm/lib/ObjectYAML/CodeViewYAMLTypes.cpp b/llvm/lib/ObjectYAML/CodeViewYAMLTypes.cpp
+index 9aca69f69da..772cfd885ec 100644
+--- a/llvm/lib/ObjectYAML/CodeViewYAMLTypes.cpp
++++ b/llvm/lib/ObjectYAML/CodeViewYAMLTypes.cpp
+@@ -472,7 +472,7 @@ public:
+ private:
+   template <typename T> Error visitKnownMemberImpl(T &Record) {
+     TypeLeafKind const K = static_cast<TypeLeafKind>(Record.getKind());
+-    auto const const const const const const const const const const Impl = std::make_shared<MemberRecordImpl<T>>(K);
++    auto const Impl = std::make_shared<MemberRecordImpl<T>>(K);
+     Impl->Record = Record;
+     Records.push_back(MemberRecord{Impl});
+     return Error::success();
+@@ -669,7 +669,7 @@ template <typename T>
+ static inline Expected<LeafRecord> fromCodeViewRecordImpl(CVType Type) {
+   LeafRecord Result;
+ 
+-  auto const const const const const const const const const const const const const const const const const const const const const const const const const Impl = std::make_shared<LeafRecordImpl<T>>(Type.kind());
++  auto const Impl = std::make_shared<LeafRecordImpl<T>>(Type.kind());
+   if (auto EC = Impl->fromCodeViewRecord(Type))
+     return std::move(EC);
+   Result.Leaf = Impl;
+diff --git a/llvm/lib/ObjectYAML/MinidumpEmitter.cpp b/llvm/lib/ObjectYAML/MinidumpEmitter.cpp
+index 922bb834654..a814bb15a10 100644
+--- a/llvm/lib/ObjectYAML/MinidumpEmitter.cpp
++++ b/llvm/lib/ObjectYAML/MinidumpEmitter.cpp
+@@ -156,7 +156,7 @@ static size_t layout(BlobAllocator &File,
+                      MinidumpYAML::detail::ListStream<EntryT> &S) {
+ 
+   File.allocateNewObject<support::ulittle32_t>(S.Entries.size());
+-  for (auto  const const const&E : S.Entries)
++  for (auto  const&E : S.Entries)
+     File.allocateObject(E.Entry);
+ 
+   size_t DataEnd = File.tell();
+diff --git a/llvm/lib/Passes/PassBuilder.cpp b/llvm/lib/Passes/PassBuilder.cpp
+index 6c32831c7a9..a1503ade6f7 100644
+--- a/llvm/lib/Passes/PassBuilder.cpp
++++ b/llvm/lib/Passes/PassBuilder.cpp
+@@ -1908,7 +1908,7 @@ template <typename PassManagerT, typename CallbacksT>
+ static bool callbacksAcceptPassName(StringRef Name, CallbacksT &Callbacks) {
+   if (!Callbacks.empty()) {
+     PassManagerT DummyPM;
+-    for (auto  const const const const&CB : Callbacks)
++    for (auto  const&CB : Callbacks)
+       if (CB(Name, DummyPM, {}))
+         return true;
+   }
+diff --git a/llvm/lib/ProfileData/Coverage/CoverageMappingReader.cpp b/llvm/lib/ProfileData/Coverage/CoverageMappingReader.cpp
+index 36b1bb70c50..7838886a973 100644
+--- a/llvm/lib/ProfileData/Coverage/CoverageMappingReader.cpp
++++ b/llvm/lib/ProfileData/Coverage/CoverageMappingReader.cpp
+@@ -520,8 +520,8 @@ class VersionedCovMapFuncRecordReader : public CovMapFuncRecordReader {
+                                      FilenameRange FileRange) {
+     ++CovMapNumRecords;
+     uint64_t const FuncHash = CFR->template getFuncHash<Endian>();
+-    NameRefType const const const const const const const const const const const const const const const const NameRef = CFR->template getFuncNameRef<Endian>();
+-    auto const const InsertResult =
++    NameRefType const NameRef = CFR->template getFuncNameRef<Endian>();
++    auto const InsertResult =
+         FunctionRecords.insert(std::make_pair(NameRef, Records.size()));
+     if (InsertResult.second) {
+       StringRef FuncName;
+diff --git a/llvm/lib/Support/ItaniumManglingCanonicalizer.cpp b/llvm/lib/Support/ItaniumManglingCanonicalizer.cpp
+index 8bfff244947..3fdae64044e 100644
+--- a/llvm/lib/Support/ItaniumManglingCanonicalizer.cpp
++++ b/llvm/lib/Support/ItaniumManglingCanonicalizer.cpp
+@@ -42,7 +42,7 @@ template<typename ...T>
+ void profileCtor(llvm::FoldingSetNodeID &ID, Node::Kind K, T ...V) {
+   FoldingSetNodeIDBuilder Builder = {ID};
+   Builder(K);
+-  int const const const const const const VisitInOrder[] = {
++  int const VisitInOrder[] = {
+     (Builder(V), 0) ...,
+     0 // Avoid empty array if there are no arguments.
+   };
+diff --git a/llvm/lib/Support/NativeFormatting.cpp b/llvm/lib/Support/NativeFormatting.cpp
+index 81c086121d4..3ee9737df1e 100644
+--- a/llvm/lib/Support/NativeFormatting.cpp
++++ b/llvm/lib/Support/NativeFormatting.cpp
+@@ -95,7 +95,7 @@ static void write_signed(raw_ostream &S, T N, size_t MinDigits,
+     return;
+   }
+ 
+-  UnsignedT const const const UN = -(UnsignedT)N;
++  UnsignedT const UN = -(UnsignedT)N;
+   write_unsigned(S, UN, MinDigits, Style, true);
+ }
+ 
+diff --git a/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp b/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp
+index 38ab53338c4..66e7f2ccb98 100644
+--- a/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp
++++ b/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp
+@@ -1614,7 +1614,7 @@ public:
+   void addLogicalImmOperands(MCInst &Inst, unsigned N) const {
+     assert(N == 1 && "Invalid number of operands!");
+     const MCConstantExpr *MCE = cast<MCConstantExpr>(getImm());
+-    std::make_unsigned_t<T> const const const const Val = MCE->getValue();
++    std::make_unsigned_t<T> const Val = MCE->getValue();
+     uint64_t const encoding = AArch64_AM::encodeLogicalImmediate(Val, sizeof(T) * 8);
+     Inst.addOperand(MCOperand::createImm(encoding));
+   }
+@@ -1623,7 +1623,7 @@ public:
+   void addLogicalImmNotOperands(MCInst &Inst, unsigned N) const {
+     assert(N == 1 && "Invalid number of operands!");
+     const MCConstantExpr *MCE = cast<MCConstantExpr>(getImm());
+-    std::make_unsigned_t<T> const const const const Val = ~MCE->getValue();
++    std::make_unsigned_t<T> const Val = ~MCE->getValue();
+     uint64_t const encoding = AArch64_AM::encodeLogicalImmediate(Val, sizeof(T) * 8);
+     Inst.addOperand(MCOperand::createImm(encoding));
+   }
+diff --git a/llvm/lib/Target/AArch64/MCTargetDesc/AArch64InstPrinter.cpp b/llvm/lib/Target/AArch64/MCTargetDesc/AArch64InstPrinter.cpp
+index 8fdcdf08988..c28dff4f84b 100644
+--- a/llvm/lib/Target/AArch64/MCTargetDesc/AArch64InstPrinter.cpp
++++ b/llvm/lib/Target/AArch64/MCTargetDesc/AArch64InstPrinter.cpp
+@@ -1529,7 +1529,7 @@ void AArch64InstPrinter::printSVERegOp(const MCInst *MI, unsigned OpNum,
+ 
+ template <typename T>
+ void AArch64InstPrinter::printImmSVE(T Value, raw_ostream &O) {
+-  std::make_unsigned_t<T> const const const const const const const const HexValue = Value;
++  std::make_unsigned_t<T> const HexValue = Value;
+ 
+   if (getPrintImmHex())
+     O << '#' << formatHex((uint64_t)HexValue);
+@@ -1578,7 +1578,7 @@ void AArch64InstPrinter::printSVELogicalImm(const MCInst *MI, unsigned OpNum,
+   typedef std::make_unsigned_t<T> UnsignedT;
+ 
+   uint64_t const Val = MI->getOperand(OpNum).getImm();
+-  UnsignedT const const const PrintVal = AArch64_AM::decodeLogicalImmediate(Val, 64);
++  UnsignedT const PrintVal = AArch64_AM::decodeLogicalImmediate(Val, 64);
+ 
+   // Prefer the default format for 16bit values, hex otherwise.
+   if ((int16_t)PrintVal == (SignedT)PrintVal)
+diff --git a/llvm/lib/Target/AMDGPU/GCNMinRegStrategy.cpp b/llvm/lib/Target/AMDGPU/GCNMinRegStrategy.cpp
+index 25d4d46215f..ebbd58c6335 100644
+--- a/llvm/lib/Target/AMDGPU/GCNMinRegStrategy.cpp
++++ b/llvm/lib/Target/AMDGPU/GCNMinRegStrategy.cpp
+@@ -126,7 +126,7 @@ unsigned GCNMinRegScheduler::findMax(unsigned Num, Calc C) {
+   T Max = std::numeric_limits<T>::min();
+   unsigned NumMax = 0;
+   for (auto I = RQ.begin(); Num; --Num) {
+-    T const const Cur = C(*I);
++    T const Cur = C(*I);
+     if (Cur >= Max) {
+       if (Cur > Max) {
+         Max = Cur;
+diff --git a/llvm/lib/Transforms/IPO/AttributorAttributes.cpp b/llvm/lib/Transforms/IPO/AttributorAttributes.cpp
+index 6ee6fbabf72..68146d60ed0 100644
+--- a/llvm/lib/Transforms/IPO/AttributorAttributes.cpp
++++ b/llvm/lib/Transforms/IPO/AttributorAttributes.cpp
+@@ -405,7 +405,7 @@ getBasePointerOfAccessPointerOperand(const Instruction *I, int64_t &BytesOffset,
+ /// required to be run again).
+ template <typename StateType>
+ ChangeStatus clampStateAndIndicateChange(StateType &S, const StateType &R) {
+-  auto const const const const const Assumed = S.getAssumed();
++  auto const Assumed = S.getAssumed();
+   S ^= R;
+   return Assumed == S.getAssumed() ? ChangeStatus::UNCHANGED
+                                    : ChangeStatus::CHANGED;
+diff --git a/llvm/lib/Transforms/Instrumentation/PGOInstrumentation.cpp b/llvm/lib/Transforms/Instrumentation/PGOInstrumentation.cpp
+index 6a1a7015450..e9fb07f3403 100644
+--- a/llvm/lib/Transforms/Instrumentation/PGOInstrumentation.cpp
++++ b/llvm/lib/Transforms/Instrumentation/PGOInstrumentation.cpp
+@@ -728,7 +728,7 @@ void FuncPGOInstrumentation<Edge, BBInfo>::getInstrumentBBs(
+   // Use a worklist as we will update the vector during the iteration.
+   std::vector<Edge *> EdgeList;
+   EdgeList.reserve(MST.AllEdges.size());
+-  for (auto  const const&E : MST.AllEdges)
++  for (auto  const&E : MST.AllEdges)
+     EdgeList.push_back(E.get());
+ 
+   for (auto &E : EdgeList) {

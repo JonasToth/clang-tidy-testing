@@ -115,6 +115,18 @@ transform_const() {
 
     log_info "Commiting automatic refactoring"
     git commit -am "[Refactor] automatically declare everything const"
+
+    return 0
+}
+
+fixup_const_transform() {
+
+    log_info "Manual Patching of known issues"
+    cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
+    patch -p1 < "${CLANG_TIDY_LIB}/../transformations/const/deduplication.patch" || die "Patch 1 does not apply"
+    patch -p1 < "${CLANG_TIDY_LIB}/../transformations/const/mistakes.patch" || die "Patch 2 does not apply"
+    patch -p1 < "${CLANG_TIDY_LIB}/../transformations/const/bad_transform.patch" || die "Patch 3 does not apply"
+    git commit -am "[Fix] manual fixing of mistakes"
     return 0
 }
 
@@ -136,4 +148,5 @@ workstep isolation transform_isolate_declarations
 workstep test_isolation check_isolation
 
 workstep const transform_const
+workstep fix_const fixup_const_transform
 workstep test_const check_const

@@ -1,0 +1,78 @@
+commit b9ecc263c56fe302748cfd2d4ae2a5971aabd1b2
+Author: Jonas Toth <development@jonas-toth.eu>
+Date:   Sun Sep 27 11:39:10 2020 +0200
+
+    [Fix] analysis mistakes
+
+diff --git a/llvm/lib/ProfileData/InstrProfReader.cpp b/llvm/lib/ProfileData/InstrProfReader.cpp
+index c1cd11ad2d0..0a9fc261555 100644
+--- a/llvm/lib/ProfileData/InstrProfReader.cpp
++++ b/llvm/lib/ProfileData/InstrProfReader.cpp
+@@ -391,7 +391,7 @@ Error RawInstrProfReader<IntPtrT>::readHeader(
+   NamesStart = Start + NamesOffset;
+   ValueDataStart = reinterpret_cast<const uint8_t *>(Start + ValueDataOffset);
+ 
+-  std::unique_ptr<InstrProfSymtab> const NewSymtab = std::make_unique<InstrProfSymtab>();
++  std::unique_ptr<InstrProfSymtab> NewSymtab = std::make_unique<InstrProfSymtab>();
+   if (Error E = createSymtab(*NewSymtab.get()))
+     return E;
+ 
+diff --git a/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp b/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp
+index 66e7f2ccb98..62ed519cdc1 100644
+--- a/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp
++++ b/llvm/lib/Target/AArch64/AsmParser/AArch64AsmParser.cpp
+@@ -3362,7 +3362,7 @@ AArch64AsmParser::tryParseVectorList(OperandVector &Operands,
+   auto const LCurly = Parser.getTok();
+   Parser.Lex(); // Eat left bracket token.
+ 
+-  StringRef const Kind;
++  StringRef Kind;
+   unsigned FirstReg;
+   auto ParseRes = ParseVector(FirstReg, Kind, getLoc(), ExpectMatch);
+ 
+@@ -3379,7 +3379,7 @@ AArch64AsmParser::tryParseVectorList(OperandVector &Operands,
+ 
+   if (parseOptionalToken(AsmToken::Minus)) {
+     SMLoc const Loc = getLoc();
+-    StringRef const NextKind;
++    StringRef NextKind;
+ 
+     unsigned Reg;
+     ParseRes = ParseVector(Reg, NextKind, getLoc(), true);
+@@ -3404,7 +3404,7 @@ AArch64AsmParser::tryParseVectorList(OperandVector &Operands,
+   else {
+     while (parseOptionalToken(AsmToken::Comma)) {
+       SMLoc const Loc = getLoc();
+-      StringRef const NextKind;
++      StringRef NextKind;
+       unsigned Reg;
+       ParseRes = ParseVector(Reg, NextKind, getLoc(), true);
+       if (ParseRes != MatchOperand_Success)
+diff --git a/llvm/lib/Target/X86/X86ISelLowering.cpp b/llvm/lib/Target/X86/X86ISelLowering.cpp
+index 80744831cdd..989b6ea1164 100644
+--- a/llvm/lib/Target/X86/X86ISelLowering.cpp
++++ b/llvm/lib/Target/X86/X86ISelLowering.cpp
+@@ -13577,8 +13577,8 @@ static SDValue lowerShuffleAsPermuteAndUnpack(
+   bool UnpackLo = NumLoInputs >= NumHiInputs;
+ 
+   auto TryUnpack = [&](int ScalarSize, int Scale) {
+-    SmallVector<int, 16> const V1Mask((unsigned)Size, -1);
+-    SmallVector<int, 16> const V2Mask((unsigned)Size, -1);
++    SmallVector<int, 16> V1Mask((unsigned)Size, -1);
++    SmallVector<int, 16> V2Mask((unsigned)Size, -1);
+ 
+     for (int i = 0; i < Size; ++i) {
+       if (Mask[i] < 0)
+diff --git a/llvm/lib/Transforms/IPO/OpenMPOpt.cpp b/llvm/lib/Transforms/IPO/OpenMPOpt.cpp
+index 40fbb64ca13..b816ca2f74a 100644
+--- a/llvm/lib/Transforms/IPO/OpenMPOpt.cpp
++++ b/llvm/lib/Transforms/IPO/OpenMPOpt.cpp
+@@ -69,7 +69,7 @@ static void foreachUse(Function &F, CBTy CB,
+   SmallVector<Use *, 8> Worklist(make_pointer_range(F.uses()));
+ 
+   for (unsigned idx = 0; idx < Worklist.size(); ++idx) {
+-    Use  const&U = *Worklist[idx];
++    Use  &U = *Worklist[idx];
+ 
+     // Allow use in constant bitcasts and simply look through them.
+     if (LookThroughConstantExprUses && isa<ConstantExpr>(U.getUser())) {
