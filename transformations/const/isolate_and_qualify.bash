@@ -7,7 +7,7 @@
 # This code transformation for LLVM includes multiple steps and potential
 # manual patching. Each stage is verified with `ninja check-all`.
 
-: "${SOURCE_DIR:=/data/big/llvm-project}"
+: "${SOURCE_DIR:=/data/big/llvm-testing}"
 : "${BINARY_DIR:=/data/big/dev-build}"
 : "${TEST_BUILD:=/data/big/test-build}"
 
@@ -21,7 +21,7 @@
 : "${LOG_DIR:=/data/big/transformation/${BASE_REV}}"
 : "${PROGRESS_DIR:=${LOG_DIR}}"
 
-: "${TRANSFORM_DIRS:=lib/}"
+: "${TRANSFORM_DIRS:=llvm/lib/ clang/lib}"
 
 shutdown() {
   # Get our process group id
@@ -143,7 +143,7 @@ check_const() {
     return 0
 }
 
-workstep test_initial check_initial_state
+# workstep test_initial check_initial_state
 
 workstep isolation transform_isolate_declarations
 workstep test_isolation check_isolation
