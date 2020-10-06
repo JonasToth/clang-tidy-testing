@@ -21,7 +21,7 @@
 : "${LOG_DIR:=/data/big/transformation/${BASE_REV}}"
 : "${PROGRESS_DIR:=${LOG_DIR}}"
 
-: "${TRANSFORM_DIRS:=llvm/lib/ clang/lib}"
+: "${TRANSFORM_DIRS:=lib/}"
 
 shutdown() {
   # Get our process group id
