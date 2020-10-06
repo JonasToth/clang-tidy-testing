@@ -51,6 +51,10 @@ source "${CLANG_TIDY_LIB}/run_clang_tidy.bash" || die "Can not source clang-tidy
 log_info "Create new branch from current revision ${BASE_REV}, called ${BRANCH_NAME}"
 cd "${SOURCE_DIR}" || die "Can't switch into ${SOURCE_DIR}"
 
+if [ -z "${BASE_REV}" ] ; then
+    die "BASE_REV revision could not be determined"
+fi
+
 if GIT_STATUS=$(git status --porcelain) && [ -z "${GIT_STATUS}" ]; then
     git checkout "${BRANCH_NAME}" || git checkout -b "${BRANCH_NAME}"
 else
