@@ -621,3 +621,16 @@ index 6a1a7015450..e9fb07f3403 100644
      EdgeList.push_back(E.get());
  
    for (auto &E : EdgeList) {
+diff --git a/llvm/lib/Demangle/ItaniumDemangle.cpp b/llvm/lib/Demangle/ItaniumDemangle.cpp
+index bce29ecadbb..eaa7d2752e1 100644
+--- a/llvm/lib/Demangle/ItaniumDemangle.cpp
++++ b/llvm/lib/Demangle/ItaniumDemangle.cpp
+@@ -206,7 +206,7 @@ struct DumpVisitor {
+       if (Visitor.anyWantNewline(V, Vs...))
+         Visitor.newLine();
+       Visitor.printWithPendingNewline(V);
+-      int const const const const const const PrintInOrder[] = { (Visitor.printWithComma(Vs), 0)..., 0 };
++      int const PrintInOrder[] = { (Visitor.printWithComma(Vs), 0)..., 0 };
+       (void)PrintInOrder;
+     }
+   };
