@@ -15,7 +15,7 @@
 : "${RUN_CLANG_TIDY:=${SOURCE_DIR}/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py}"
 : "${CLANG_TIDY:=${BINARY_DIR}/bin/clang-tidy}"
 
-: "${GIT_TAG:=llvmorg-11.0.0-rc3}"
+: "${GIT_TAG:=llvmorg-11.0.0-rc6}"
 : "${BASE_REV:=$(cd ${SOURCE_DIR} && git checkout "${GIT_TAG}" > /dev/null 2>&1 && git rev-parse HEAD | cut -c -12)}"
 : "${BRANCH_NAME:=transform_${BASE_REV}}"
 : "${LOG_DIR:=/data/big/transformation/${BASE_REV}}"
@@ -147,7 +147,7 @@ check_const() {
     return 0
 }
 
-# workstep test_initial check_initial_state
+workstep test_initial check_initial_state
 
 workstep isolation transform_isolate_declarations
 workstep test_isolation check_isolation
