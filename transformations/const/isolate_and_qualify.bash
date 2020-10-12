@@ -154,6 +154,8 @@ workstep test_isolation check_isolation
 
 workstep const transform_const
 workstep fix_const fixup_const_transform
+workstep reconst transform_const
+workstep rereconst transform_const
 workstep test_const check_const
 
 log_info "+++++++++++++++++++++++++++++++++++++++++++++++"
